@@ -34,18 +34,21 @@ export const updateBlog = catchAsyncError(async (req, res, next) => {
 
 export const deleteBlog = catchAsyncError(async (req, res, next) => {
   const { _id } = req.params;
-  const { blogs } = req.user;
+  const blog = await Blog.findById({ _id });
+  if (!blog) {
+    return next(new ErrorHandler("Blog does not exist", 404));
+  }
   const user = await User.findById({ _id: req?.user?._id });
 
-  let newBlogs = blogs.map((blog) =>{
-    if( blog._id !== _id ){
-        return blog;
+  let newBlogs = user.blogs.map((blog) => {
+    if (blog._id !== _id) {
+      return blog;
     }
   });
-    console.log(newBlogs);
+  console.log(newBlogs);
   user.blogs = newBlogs;
 
-  const blog = await Blog.findByIdAndDelete({ _id });
+  blog = await Blog.findByIdAndDelete({ _id });
   user.save();
   res.status(200).json({
     success: true,
