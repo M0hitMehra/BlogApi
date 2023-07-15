@@ -16,7 +16,9 @@ app.use(cors({
 //routes
 import userRoutes from "./routes/userRoutes.js"
 import blogRoutes from "./routes/blogRoutes.js"
+import categoryRoutes from "./routes/categoryRoutes.js"
 app.use("/api/v1" , userRoutes)
 app.use("/api/v1/blogs" , blogRoutes)
+app.use("/api/v1/category" , categoryRoutes)
 
 export default app;

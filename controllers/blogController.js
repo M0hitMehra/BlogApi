@@ -4,14 +4,14 @@ import User from "../models/User.js";
 import ErrorHandler from "../utils/errorHandler.js";
 
 export const createBlog = catchAsyncError(async (req, res, next) => {
-  const { poster, body, title, createdBy } = req.body;
+  const { poster, body, title, createdBy,category } = req.body;
   if (!body || !poster || !title || !createdBy)
     return next(new ErrorHandler("Please enter all required fields", 400));
-  const blog = await Blog.create({ poster, body, title, createdBy });
+  const blog = await Blog.create({ poster, body, title, createdBy,category });
   const user = await User.findById({ _id: req?.user?._id });
-  blog.save();
+ await blog.save();
   user.blogs.push(blog);
-  user.save();
+ await user.save();
   res.status(200).json({
     success: true,
     message: "Blog created successfully",
@@ -19,12 +19,12 @@ export const createBlog = catchAsyncError(async (req, res, next) => {
 });
 
 export const updateBlog = catchAsyncError(async (req, res, next) => {
-  const { poster, body, title, _id, createdBy } = req.body;
+  const { poster, body, title, _id, createdBy ,category} = req.body;
   const blog = await Blog.findByIdAndUpdate(
     { _id },
-    { poster, body, title, createdBy }
+    { poster, body, title, createdBy,category }
   );
-  blog.save();
+ await blog.save();
 
   res.status(200).json({
     success: true,
@@ -34,14 +34,14 @@ export const updateBlog = catchAsyncError(async (req, res, next) => {
 
 export const deleteBlog = catchAsyncError(async (req, res, next) => {
   const { _id } = req.params;
-  const blog = await Blog.findById({ _id });
+  let blog = await Blog.findById({ _id });
   if (!blog) {
     return next(new ErrorHandler("Blog does not exist", 404));
   }
   const user = await User.findById({ _id: req?.user?._id });
 
-  let newBlogs = user.blogs.map((blog) => {
-    if (blog._id !== _id) {
+  let newBlogs = user.blogs.filter((blog) => {
+    if (blog._id.toString() !== _id.toString()) {
       return blog;
     }
   });
@@ -49,7 +49,7 @@ export const deleteBlog = catchAsyncError(async (req, res, next) => {
   user.blogs = newBlogs;
 
   blog = await Blog.findByIdAndDelete({ _id });
-  user.save();
+  await user.save();
   res.status(200).json({
     success: true,
     message: "Blog deleted successfully",
