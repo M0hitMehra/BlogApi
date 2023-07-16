@@ -39,15 +39,21 @@ export const updateCategory = catchAsyncError(async (req, res, next) => {
   let actualSimArr = category.related;
 
   for (let i = 0; i < simArr.length; i++) {
-    let a = simArr[i];
+    const element = simArr[i].trim();
 
-    for (let j = 0; j < category.related.length; j++) {
-      if (a.trim() !== actualSimArr[j].similar.trim()) {
-        // console.log(a)
-        actualSimArr.push({ similar: a.trim() });
+    let isPresent = false;
+
+    for (let j = 0; j < actualSimArr.length; j++) {
+      const jelement = actualSimArr[j].similar.trim();
+      if (jelement === element) {
+        isPresent = true;
+        break;
       }
     }
+
+    if (!isPresent) actualSimArr.push({ similar: element });
   }
+
   category.related = actualSimArr;
   await category.save();
 
