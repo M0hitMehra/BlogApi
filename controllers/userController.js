@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 import { catchAsyncError } from "../middlewares/catchAsyncErrors.js";
 import ErrorHandler from "../utils/errorHandler.js";
 import { sendToken } from "../utils/sendToken.js";
+import { sendEmail } from "../utils/sendEmail.js";
+import crypto from "crypto";
 
 export const registerController = catchAsyncError(async (req, res, next) => {
   const { name, email, password } = req?.body;
@@ -30,8 +32,7 @@ export const loginController = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("Invalid credentials", 400));
   }
 
-  let isPasswordMatched = user.comparePassword(password);
-
+  let isPasswordMatched = await user.comparePassword(password);
   if (!isPasswordMatched) {
     return next(new ErrorHandler("Invalid credentials", 400));
   }
@@ -50,5 +51,80 @@ export const logoutController = catchAsyncError(async (req, res, next) => {
   res.status(200).cookie("token", null, options).json({
     success: true,
     message: "Logged out successfully",
+  });
+});
+
+export const getMyProfile = catchAsyncError(async (req, res, next) => {
+  const user = await User.findById(req?.user?._id);
+  res.status(200).json({
+    success: true,
+    user,
+  });
+});
+
+export const updateMyProfile = catchAsyncError(async (req, res, next) => {
+  const { name, email, password, oldPassword } = req.body;
+  const user = await User.findOne({ email } );
+  if (!user) return next(new ErrorHandler("User not found", 404));
+  user.name = name;
+  let isPasswordMatched = await user.comparePassword(oldPassword);
+  if (isPasswordMatched) {
+    user.password = password;
+  }
+
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Profile Updated successfully",
+  });
+});
+
+export const forgotPassword = catchAsyncError(async (req, res, next) => {
+  const { email } = req.body;
+  if (!email) return next(new ErrorHandler("Enter email", 404));
+  const user = await User.findOne({ email }).select("-password");
+
+  if (!user) return next(new ErrorHandler("User does not exist", 404));
+
+  const resetToken = user.getResetPasswordToken();
+  await user.save();
+
+  const url = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+  const message = `Click on the link to reset your password ${url}. If you have not requested to reset your password please ignore this message`;
+
+  // send EMail
+  sendEmail("Email for reseting password", email, message);
+  res.status(200).json({
+    success: true,
+    message: `Link for reseting password has been sent successfully to ${email}`,
+  });
+});
+
+export const resetPassword = catchAsyncError(async (req, res, next) => {
+  const { token } = req.params;
+  const resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(token)
+    .digest("hex");
+  const user = await User.findOne({
+    resetPasswordToken,
+    resetPasswordExpire: {
+      $gt: Date.now(),
+    },
+  });
+  if (!user)
+    return next(
+      new ErrorHandler("Invalid token or token has been expired", 400)
+    );
+
+  user.password = req?.body.password;
+  user.resetPasswordToken = null;
+  user.resetPasswordExpire = null;
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Password has been reset successfully",
   });
 });

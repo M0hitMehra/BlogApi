@@ -7,6 +7,6 @@ const router =  express.Router()
 router.route("/create-category").post(isAuthenticated , isAdmin , createCategory)
 router.route("/update-category").put(isAuthenticated , isAdmin , updateCategory)
 router.route("/get-categories").get(  getAllCategories )
-router.route("/delete-category").delete(isAuthenticated , isAdmin , deleteCategory)
+router.route("/delete-category/:name").delete(isAuthenticated , isAdmin , deleteCategory)
 
 export default router
