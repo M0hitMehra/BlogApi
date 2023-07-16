@@ -43,7 +43,7 @@ export const updateCategory = catchAsyncError(async (req, res, next) => {
 
     for (let j = 0; j < category.related.length; j++) {
       if (a.trim() !== actualSimArr[j].similar.trim()) {
-        console.log(a)
+        // console.log(a)
         actualSimArr.push({ similar: a.trim() });
       }
     }
