@@ -21,4 +21,8 @@ app.use("/api/v1" , userRoutes)
 app.use("/api/v1/blogs" , blogRoutes)
 app.use("/api/v1/category" , categoryRoutes)
 
+app.get("/",(req,res)=>{
+    res.send(`<h1>SIte is working click <a href=${process.env.FRONTEND_URL} >here</a> to visit website </h1>`)
+})
+
 export default app;
