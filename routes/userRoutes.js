@@ -1,5 +1,7 @@
 import express from "express";
 import {
+  changeUserRole,
+  deleteUser,
   forgotPassword,
   getAllUsers,
   loginController,
@@ -22,6 +24,8 @@ router.route("/profile/update").post(isAuthenticated, updateMyProfile);
 
 // ADMIN
 router.route("/admin/users").get(isAuthenticated, isAdmin, getAllUsers);
+router.route("/admin/change-role").post(isAuthenticated, isAdmin, changeUserRole);
+router.route("/admin/user/:_id").get(isAuthenticated, isAdmin, deleteUser);
 
 
 export default router;

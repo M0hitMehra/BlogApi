@@ -64,7 +64,7 @@ export const getMyProfile = catchAsyncError(async (req, res, next) => {
 
 export const updateMyProfile = catchAsyncError(async (req, res, next) => {
   const { name, email, password, oldPassword } = req.body;
-  const user = await User.findOne({ email } );
+  const user = await User.findOne({ email });
   if (!user) return next(new ErrorHandler("User not found", 404));
   user.name = name;
   let isPasswordMatched = await user.comparePassword(oldPassword);
@@ -129,13 +129,32 @@ export const resetPassword = catchAsyncError(async (req, res, next) => {
   });
 });
 
-
 // ADMIN
 
-export const getAllUsers = catchAsyncError(async (req, res, next) =>{
-  const users = await User.find()
+export const getAllUsers = catchAsyncError(async (req, res, next) => {
+  const users = await User.find();
+  res.status(200).json({
+    success: true,
+    users,
+  });
+});
+
+export const changeUserRole = catchAsyncError(async (req, res, next) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email: email });
+  user.role = user.role === "ADMIN" ? "USER" : "ADMIN";
+  await user.save();
+  res.status(200).json({
+    success: true,
+    message: "User role has been changed",
+  });
+});
+
+export const deleteUser = catchAsyncError(async (req, res, next)=>{
+  const {_id} = req.params;
+  const user = await User.findByIdAndDelete({_id})
   res.status(200).json({
     success:true,
-    users
+    message:"User Deleted Successfully"
   })
 })
