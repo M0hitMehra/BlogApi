@@ -128,3 +128,14 @@ export const resetPassword = catchAsyncError(async (req, res, next) => {
     message: "Password has been reset successfully",
   });
 });
+
+
+// ADMIN
+
+export const getAllUsers = catchAsyncError(async (req, res, next) =>{
+  const users = await User.find()
+  res.status(200).json({
+    success:true,
+    users
+  })
+})
